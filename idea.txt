@@ -1,0 +1,72 @@
+Let me research what specific data is publicly available and what the sharpest pain point within hospital handoffs actually is.Perfect. I now have everything I need — a sharply defined problem, real public data, a clear scope. Here's the refined, specific, competition-winning idea:
+
+---
+
+## 🚨 **ICU Silent Deterioration Spotter**
+*"The patient looked fine at handoff. Two hours later they coded."*
+
+### The one-line pitch
+An agentic system that ingests a real ICU patient's last 6 hours of vitals and labs from MIMIC-IV, runs three specialized Bob reasoning agents in parallel, and produces a **single-page pre-handoff intelligence brief** — flagging which patients are quietly deteriorating in ways the raw numbers don't make obvious, and *why*, with full reasoning chains a nurse can read in under 60 seconds.
+
+---
+
+### Why this specific framing is sharper than the original idea
+
+You've thrown away the wide-angle "hospital operations" lens and replaced it with the **single most documented, most costly, most specific failure point in all of nursing**: the information gap at shift change. Approximately 1.75 million nurses conduct over 300 million patient handoffs annually in the US alone, and communication failure during handoffs has been identified across multiple studies as the leading cause of preventable adverse events in hospitals. This isn't a vague healthcare problem — it has a name, a body of research, a standard tool (SBAR/I-PASS), and a well-known failure mode that the existing standard tools don't solve: **they capture current state, but not trajectory.** A patient's heart rate of 92 looks fine. A patient whose heart rate has been silently climbing from 74 to 81 to 88 to 92 over 5 hours while their urine output has been falling is a patient about to crash. No checklist catches that. Your system does.
+
+The data is **MIMIC-IV** — a publicly available ICU database from Beth Israel Deaconess Medical Center containing patient measurements, orders, diagnoses, procedures, treatments, and deidentified free-text clinical notes, free to access after a quick credentialing form at PhysioNet. You load a handful of real patient stays, no synthetic data needed.
+
+---
+
+### The MVP scope — realistic for 48 hours with Bob doing the heavy lifting
+
+**Three agents, one output. That's it.**
+
+**Agent 1 — Trend Agent** *(the hard one nobody builds)*
+Doesn't just look at the last vitals reading. Calculates the *rate of change* across 6 time windows for heart rate, respiratory rate, systolic BP, SpO2, and temperature. Scores each patient not on where they are but on **where they're heading** and how fast. A patient trending toward a NEWS2 threshold scores higher than one already past it but stable.
+
+**Agent 2 — Lab-Vitals Conflict Agent** *(the clinically interesting one)*
+Looks for combinations that individually look acceptable but together are a red flag — the classic being normal BP + rising lactate (compensated shock), or normal heart rate + rising creatinine + falling urine output (early AKI), or stable O2 sats + rising respiratory rate (the body compensating before it can't anymore). These are the patterns that kill people on night shifts.
+
+**Agent 3 — Time Bomb Agent** *(the practical one nurses love)*
+Looks specifically at what's *about to happen* in the next 2–3 hours of the incoming shift: a medication due that hasn't been confirmed reconciled, a lab result still pending that could change the care plan, a PRN order that hasn't been touched in 18 hours suggesting symptom escalation. Pure forward-looking time pressure.
+
+**The Output — the SBAR+ Brief**
+One page per patient, auto-generated, structured as:
+- 🟢/🟡/🔴 risk colour (trajectory-based, not snapshot-based)
+- One sentence on *what's changing* and at what rate
+- One sentence on *what combination of findings* is concerning
+- One sentence on *what needs attention in the next 2 hours*
+- Full reasoning chain collapsed below, expandable — every number cited, every inference explained
+
+That's the entire MVP. No bed management, no resource allocation, no staffing ratios — those were the bloat. Just: here are your 8 patients, ranked by hidden risk, with one paragraph each you can read in the elevator.
+
+---
+
+### What specifically showcases Bob's architecture to judges
+
+The **Trend + Lab Conflict agents running in parallel and then being synthesized by a coordinator agent** is the exact demonstration of Bob's multi-agent orchestration that no other team will show. Most teams will chain prompts sequentially. You're running concurrent specialized reasoners and merging their outputs — which is architecturally what Bob was built for and what makes it different from a GitHub Copilot. The judges built this tool. They'll recognize what you did immediately.
+
+The **expandable reasoning chain** is your BobShell auditability demo. Every output is traceable. A nurse can ask "why is this patient flagged yellow?" and get the exact data points and inference steps. That's not a UI nicety — it's the core governance feature IBM built Bob around, demonstrated in the highest-stakes possible context.
+
+---
+
+### The 48-hour build plan
+
+| Hours | Task |
+|---|---|
+| 0–3 | Pull 20 real patient stays from MIMIC-IV demo dataset, understand the schema |
+| 3–6 | Build the data loader and normalizer with Bob — it writes the ETL, you direct it |
+| 6–10 | Build Agent 1 (Trend) with Bob — define the scoring logic, let Bob implement |
+| 10–14 | Build Agent 2 (Lab-Conflict) and Agent 3 (Time Bomb) with Bob |
+| 14–18 | Build the coordinator synthesis layer and SBAR+ output template |
+| 18–24 | Build the UI — a clean single-screen dashboard, Bob writes the frontend |
+| 24–36 | Test on real MIMIC patients, tune the agents, fix reasoning errors |
+| 36–44 | Polish, record the demo video on a genuinely dramatic real patient case |
+| 44–48 | Submit |
+
+The demo video writes itself: pick a real MIMIC-IV patient who deteriorated and coded, show that your system would have flagged them **3 hours before it happened**, at the prior shift handoff. That's your 90-second money shot.
+
+---
+
+Narrow. Specific. Real data. Real problem with a body count attached to it. Two days. Go. 🔴
