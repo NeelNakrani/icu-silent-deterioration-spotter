@@ -1,0 +1,36 @@
+in the very basic form we can devide the entire system into 2 major components
+1) Backend Data Processing Containing a 3 layered architecture
+        A) Layer 0: Containing Raw Data & Data Loader + data transformation Logic
+        B) Layer 1: Agents and Processors
+        -> All the below agents will be running in parallel to handle different aspects of silent deterioration.
+        Note: (Considering this is for a hackathon, it dosent contain a more advanced ML & statistical based predictive models.
+        In Real Use cases this layer can be improvised to contain more agents and checks based on domain knowledge.)
+                * Trend Analysis Agent 
+                * Lab-Vitals Conflict Detection Agent
+                * Time Bomb Observer Agent
+        C) layer 2: Data Presentation 
+        -> This layer will be responsible for Aggregating the data from all the agents and ideally provide a complete SBAR + Brief for the nurse to
+            take action.
+        -> This can be made even more sophisticated by aggregating patients differently based on their risk badge. it can serve as a prioritisation
+            tool for the nurse to decide which patient needs attention first.
+2) & Frontend UI and dashboards making it intuitive to use for the nurses
+    -> Layer 3: This is final output layer which will be most used by the nurse. making it as user friendly as possible and accurate is of utmost importance as
+    it shapes the decision making process of the nurse and can lead to better patient outcomes.
+
+
+
+
+
+ 
+
+
+
+
+
+
+
+
+trend_agent(patient_data: dict) -> TrendReport
+lab_conflict_agent(patient_data: dict) -> ConflictReport
+time_bomb_agent(patient_data: dict) -> TimeBombReport
+coordinator(trend: TrendReport, conflict: ConflictReport, timebomb: TimeBombReport) -> SBARBrief
