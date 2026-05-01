@@ -1,0 +1,181 @@
+openapi: 3.0.3
+
+info:
+  title: ICU Silent Deterioration Spotter API
+  description: |
+    REST API powering the ICU Silent Deterioration Spotter dashboard.
+    The backend runs three parallel agents (Trend, Lab-Vitals Conflict, Time Bomb)
+    per patient, synthesises results via a Coordinator LLM call, and exposes
+    structured `SBARBrief` objects to the frontend.
+  version: 0.1.0
+  contact:
+    name: ICU Spotter Team (IBM Bob Hackathon 2026)
+
+servers:
+  - url: http://localhost:8000
+    description: Local development (FastAPI default)
+
+tags:
+  - name: Patients
+    description: Patient risk list and individual SBAR+ briefs
+  - name: System
+    description: Health and readiness checks
+
+paths:
+
+  /health:
+    get:
+      operationId: healthCheck
+      tags: [System]
+      summary: Health check
+      description: Returns 200 when the API is up and all internal dependencies are reachable.
+      responses:
+        "200":
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+        "503":
+          description: Service unavailable
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients:
+    get:
+      operationId: listPatients
+      tags: [Patients]
+      summary: List all patients ranked by risk
+      description: |
+        Returns a lightweight summary for every active ICU patient, sorted by
+        risk severity (red → yellow → green). Used to render the patient list
+        screen. Auto-refresh interval recommended: 60 s.
+      responses:
+        "200":
+          description: Sorted patient summary list
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PatientListResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients/{patient_id}/brief:
+    get:
+      operationId: getPatientBrief
+      tags: [Patients]
+      summary: Full SBAR+ brief for a single patient
+      description: |
+        Returns the most recently computed `SBARBrief` for the given patient,
+        including full agent sub-reports (trend, conflict, time-bomb) and any
+        data-quality warnings.
+      parameters:
+        - $ref: "#/components/parameters/PatientId"
+      responses:
+        "200":
+          description: Full SBAR+ brief
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SBARBrief"
+        "404":
+          description: Patient not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+  /patients/{patient_id}/refresh:
+    post:
+      operationId: refreshPatientBrief
+      tags: [Patients]
+      summary: Re-run all agents for a patient and update the brief
+      description: |
+        Triggers a fresh pipeline run for the patient: re-ingests the latest
+        MIMIC-IV data window, runs all three agents concurrently, and regenerates
+        the SBAR+ brief via the Coordinator LLM call.
+        Returns the newly computed brief synchronously (may take a few seconds).
+      parameters:
+        - $ref: "#/components/parameters/PatientId"
+      responses:
+        "200":
+          description: Freshly computed SBAR+ brief
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SBARBrief"
+        "404":
+          description: Patient not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "500":
+          description: Internal server error (includes partial agent failures)
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+
+components:
+
+  parameters:
+    PatientId:
+      name: patient_id
+      in: path
+      required: true
+      description: MIMIC-IV `subject_id` string
+      schema:
+        type: string
+        example: "10006"
+
+  schemas:
+
+    # -------------------------------------------------------------------------
+    # Utility / meta schemas
+    # -------------------------------------------------------------------------
+
+    HealthResponse:
+      type: object
+      description: TODO - finalise after DB schema is decided
+      additionalProperties: true
+
+    ErrorResponse:
+      type: object
+      description: TODO - finalise after DB schema is decided
+      additionalProperties: true
+
+    # -------------------------------------------------------------------------
+    # Patient list
+    # -------------------------------------------------------------------------
+
+    PatientSummary:
+      type: object
+      description: TODO - finalise after MIMIC-IV data analysis and DB schema are decided
+      additionalProperties: true
+
+    PatientListResponse:
+      type: object
+      description: TODO - finalise after MIMIC-IV data analysis and DB schema are decided
+      additionalProperties: true
+
+    # -------------------------------------------------------------------------
+    # Coordinator output — SBARBrief (top-level response object)
+    # -------------------------------------------------------------------------
+
+    SBARBrief:
+      type: object
+      description: TODO - finalise after MIMIC-IV data analysis and DB schema are decided
+      additionalProperties: true

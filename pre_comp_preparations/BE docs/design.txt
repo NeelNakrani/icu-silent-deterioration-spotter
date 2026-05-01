@@ -1,0 +1,23 @@
+how the system would work?
+-> An simulator emitting raw data
+-> Backend handling below process
+a.) Ingest data from the simulator & logics for data loaders
+b.) Feed the data to the Agenets & Observor agent  
+c.) Using LLMs & other models to analyze the data
+d.) Creating structured SBAR+brief
+e.) Storing the briefs in Database
+f.) Exposing the briefs via API for the UI to consume
+
+
+BE system can further devided into 2 main parts:
+1.) Scheduled Job that runs every 30 sec 
+(for demo puposes, in real world this would be event based, and would implement rabiit mq for emmitting and capturing data.)
+2.) API Layer that exposes the briefs via API for the UI to consume
+
+
+
+Things that must to be done before API spec:
+-> 1.) Go through Raw Database
+-> 2.) DO the Analysis of the data with numpy + pandas
+-> 3.) Based on Analysis, decide on the data model for API
+-> 4.) Update the api spec with exact data-model
