@@ -1,0 +1,5 @@
+Starting point for Data analysis is this notebook: 
+ - Extracted and cleaned the MIMIC-IV demo data.
+ - Created a master multi-patient timeline.
+ - Verified the demo Trend Agent's math.
+https://colab.research.google.com/drive/1vi0fQQg3h9lyagFpiZPA5tQYX0w9OtxE?usp=sharing
